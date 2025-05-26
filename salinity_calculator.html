@@ -1,0 +1,737 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Seawater Salinity Calculator</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+
+        .container {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            border-radius: 20px;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+            padding: 40px;
+            max-width: 500px;
+            width: 100%;
+            animation: fadeIn 0.8s ease-out;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        h1 {
+            text-align: center;
+            color: #2c3e50;
+            margin-bottom: 30px;
+            font-size: 2rem;
+            font-weight: 600;
+        }
+
+        .subtitle {
+            text-align: center;
+            color: #7f8c8d;
+            margin-bottom: 30px;
+            font-size: 1rem;
+        }
+
+        .input-group {
+            margin-bottom: 25px;
+            position: relative;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 8px;
+            color: #34495e;
+            font-weight: 500;
+            font-size: 0.95rem;
+        }
+
+        input[type="number"] {
+            width: 100%;
+            padding: 15px;
+            border: 2px solid #e1e8ed;
+            border-radius: 12px;
+            font-size: 1rem;
+            transition: all 0.3s ease;
+            background: #f8f9fa;
+        }
+
+        input[type="number"]:focus {
+            outline: none;
+            border-color: #667eea;
+            background: white;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+            transform: translateY(-1px);
+        }
+
+        .unit {
+            position: absolute;
+            right: 15px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: #7f8c8d;
+            font-size: 0.9rem;
+            pointer-events: none;
+        }
+
+        .button-group {
+            display: flex;
+            gap: 15px;
+            margin: 30px 0;
+        }
+
+        button {
+            flex: 1;
+            padding: 15px;
+            border: none;
+            border-radius: 12px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .calculate-btn {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+
+        .calculate-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(102, 126, 234, 0.3);
+        }
+
+        .reset-btn {
+            background: #ecf0f1;
+            color: #7f8c8d;
+        }
+
+        .reset-btn:hover {
+            background: #d5dbdb;
+            transform: translateY(-2px);
+        }
+
+        .result {
+            background: linear-gradient(135deg, #a8edea 0%, #fed6e3 100%);
+            border-radius: 12px;
+            padding: 20px;
+            text-align: center;
+            margin-top: 25px;
+            opacity: 0;
+            transform: translateY(10px);
+            transition: all 0.5s ease;
+        }
+
+        .result.show {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        .result-label {
+            color: #2c3e50;
+            font-size: 0.9rem;
+            margin-bottom: 8px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .result-value {
+            color: #2c3e50;
+            font-size: 2rem;
+            font-weight: bold;
+        }
+
+        .formula-info {
+            background: #f8f9fa;
+            border-radius: 12px;
+            padding: 20px;
+            margin-top: 25px;
+            border-left: 4px solid #667eea;
+        }
+
+        .formula-info h3 {
+            color: #2c3e50;
+            margin-bottom: 10px;
+            font-size: 1.1rem;
+        }
+
+        .formula-info p {
+            color: #7f8c8d;
+            font-size: 0.9rem;
+            line-height: 1.5;
+        }
+
+        .error {
+            background: #ff6b6b;
+            color: white;
+            padding: 15px;
+            border-radius: 8px;
+            margin-top: 15px;
+            text-align: center;
+            opacity: 0;
+            transform: translateY(10px);
+            transition: all 0.3s ease;
+        }
+
+        .error.show {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        .graph-container {
+            background: white;
+            border-radius: 15px;
+            padding: 25px;
+            margin-top: 30px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+            text-align: center;
+        }
+
+        .graph-container h3 {
+            color: #2c3e50;
+            margin-bottom: 20px;
+            text-align: center;
+            font-size: 1.3rem;
+        }
+
+        #salinityGraph {
+            border: 2px solid #e1e8ed;
+            border-radius: 10px;
+            cursor: crosshair;
+            display: block;
+            margin: 0 auto;
+            background: #fafbfc;
+        }
+
+        .graph-info {
+            margin-top: 15px;
+            text-align: center;
+        }
+
+        .graph-info p {
+            color: #7f8c8d;
+            font-size: 0.9rem;
+            margin: 5px 0;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🌊 Seawater Salinity Calculator</h1>
+        <p class="subtitle">Calculate salinity from conductivity and temperature using UNESCO Practical Salinity Scale</p>
+        
+        <div id="salinityForm">
+            <div class="input-group">
+                <label for="conductivity">Conductivity</label>
+                <input type="number" id="conductivity" step="0.001" min="0" placeholder="Enter conductivity value">
+                <span class="unit">mS/cm</span>
+            </div>
+            
+            <div class="input-group">
+                <label for="temperature">Temperature</label>
+                <input type="number" id="temperature" step="0.01" placeholder="Enter temperature value">
+                <span class="unit">°C</span>
+            </div>
+            
+            <div class="button-group">
+                <button type="button" class="calculate-btn" onclick="calculateSalinityFromInputs()">Calculate Salinity</button>
+                <button type="button" class="reset-btn" onclick="resetForm()">Reset</button>
+            </div>
+        </div>
+        
+        <div id="result" class="result">
+            <div class="result-label">Practical Salinity</div>
+            <div class="result-value" id="salinityValue">-- PSU</div>
+        </div>
+        
+        <div id="error" class="error"></div>
+        
+        <div class="graph-container">
+            <h3>Conductivity vs Salinity with Temperature Contours</h3>
+            <canvas id="salinityGraph" width="800" height="500"></canvas>
+            <div class="graph-info">
+                <p>Click on any temperature contour to set conductivity and temperature values automatically.</p>
+                <p>Temperature contours: -5°C, 0°C, 5°C, 10°C, 15°C, 20°C, 25°C, 30°C</p>
+            </div>
+        </div>
+        
+        <div class="formula-info">
+            <h3>About the Calculation</h3>
+            <p>This calculator uses the UNESCO Practical Salinity Scale equations to determine salinity from conductivity and temperature measurements. The calculation assumes standard atmospheric pressure and is based on the conductivity ratio relative to standard seawater (KCl solution).</p>
+        </div>
+    </div>
+
+    <script>
+        // Graph variables
+        let canvas, ctx;
+        let currentOperatingPoint = null;
+        let temperatureContours = [];
+        
+        // Graph dimensions and scaling
+        const GRAPH_MARGIN = 60;
+        const CONDUCTIVITY_MIN = 0;
+        const CONDUCTIVITY_MAX = 100;
+        const SALINITY_MIN = 0;
+        const SALINITY_MAX = 50;
+        const TEMPERATURES = [-5, 0, 5, 10, 15, 20, 25, 30];
+        const TEMP_COLORS = ['#0066cc', '#0080ff', '#00ccff', '#00ff80', '#80ff00', '#ffcc00', '#ff8000', '#ff4000'];
+
+        function initGraph() {
+            canvas = document.getElementById('salinityGraph');
+            ctx = canvas.getContext('2d');
+            
+            // Generate temperature contours
+            generateTemperatureContours();
+            
+            // Draw initial graph
+            drawGraph();
+            
+            // Add click event listener
+            canvas.addEventListener('click', handleGraphClick);
+        }
+
+        function generateTemperatureContours() {
+            temperatureContours = [];
+            
+            TEMPERATURES.forEach((temp, tempIndex) => {
+                const contour = [];
+                
+                // Generate points along the conductivity range
+                for (let c = CONDUCTIVITY_MIN; c <= CONDUCTIVITY_MAX; c += 0.5) {
+                    const salinity = calculateSalinity(c, temp);
+                    if (salinity >= SALINITY_MIN && salinity <= SALINITY_MAX) {
+                        contour.push({
+                            conductivity: c,
+                            salinity: salinity,
+                            temperature: temp
+                        });
+                    }
+                }
+                
+                if (contour.length > 0) {
+                    temperatureContours.push({
+                        temperature: temp,
+                        points: contour,
+                        color: TEMP_COLORS[tempIndex]
+                    });
+                }
+            });
+        }
+
+        function drawGraph() {
+            // Clear canvas
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            
+            // Draw background
+            ctx.fillStyle = '#fafbfc';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+            
+            // Draw grid
+            drawGrid();
+            
+            // Draw axes
+            drawAxes();
+            
+            // Draw temperature contours
+            drawTemperatureContours();
+            
+            // Draw operating point if exists
+            if (currentOperatingPoint) {
+                drawOperatingPoint();
+            }
+        }
+
+        function drawGrid() {
+            ctx.strokeStyle = '#e8ecef';
+            ctx.lineWidth = 1;
+            
+            // Vertical grid lines (conductivity)
+            for (let c = 0; c <= CONDUCTIVITY_MAX; c += 10) {
+                const x = conductivityToPixel(c);
+                ctx.beginPath();
+                ctx.moveTo(x, GRAPH_MARGIN);
+                ctx.lineTo(x, canvas.height - GRAPH_MARGIN);
+                ctx.stroke();
+            }
+            
+            // Horizontal grid lines (salinity)
+            for (let s = 0; s <= SALINITY_MAX; s += 5) {
+                const y = salinityToPixel(s);
+                ctx.beginPath();
+                ctx.moveTo(GRAPH_MARGIN, y);
+                ctx.lineTo(canvas.width - GRAPH_MARGIN, y);
+                ctx.stroke();
+            }
+        }
+
+        function drawAxes() {
+            ctx.strokeStyle = '#2c3e50';
+            ctx.lineWidth = 2;
+            ctx.font = '12px Segoe UI';
+            ctx.fillStyle = '#2c3e50';
+            
+            // X-axis
+            ctx.beginPath();
+            ctx.moveTo(GRAPH_MARGIN, canvas.height - GRAPH_MARGIN);
+            ctx.lineTo(canvas.width - GRAPH_MARGIN, canvas.height - GRAPH_MARGIN);
+            ctx.stroke();
+            
+            // Y-axis
+            ctx.beginPath();
+            ctx.moveTo(GRAPH_MARGIN, GRAPH_MARGIN);
+            ctx.lineTo(GRAPH_MARGIN, canvas.height - GRAPH_MARGIN);
+            ctx.stroke();
+            
+            // X-axis labels
+            for (let c = 0; c <= CONDUCTIVITY_MAX; c += 20) {
+                const x = conductivityToPixel(c);
+                ctx.fillText(c.toString(), x - 8, canvas.height - GRAPH_MARGIN + 20);
+            }
+            
+            // Y-axis labels
+            for (let s = 0; s <= SALINITY_MAX; s += 10) {
+                const y = salinityToPixel(s);
+                ctx.fillText(s.toString(), GRAPH_MARGIN - 25, y + 4);
+            }
+            
+            // Axis titles
+            ctx.font = '14px Segoe UI';
+            ctx.fillText('Conductivity (mS/cm)', canvas.width / 2 - 70, canvas.height - 15);
+            
+            ctx.save();
+            ctx.translate(20, canvas.height / 2);
+            ctx.rotate(-Math.PI / 2);
+            ctx.fillText('Salinity (PSU)', -50, 0);
+            ctx.restore();
+        }
+
+        function drawTemperatureContours() {
+            temperatureContours.forEach(contour => {
+                if (contour.points.length < 2) return;
+                
+                ctx.strokeStyle = contour.color;
+                ctx.lineWidth = 2;
+                ctx.beginPath();
+                
+                const firstPoint = contour.points[0];
+                ctx.moveTo(conductivityToPixel(firstPoint.conductivity), salinityToPixel(firstPoint.salinity));
+                
+                contour.points.forEach((point, index) => {
+                    if (index > 0) {
+                        ctx.lineTo(conductivityToPixel(point.conductivity), salinityToPixel(point.salinity));
+                    }
+                });
+                
+                ctx.stroke();
+                
+                // Add temperature label at the end of contour
+                if (contour.points.length > 0) {
+                    const lastPoint = contour.points[contour.points.length - 1];
+                    const x = conductivityToPixel(lastPoint.conductivity);
+                    const y = salinityToPixel(lastPoint.salinity);
+                    
+                    ctx.fillStyle = contour.color;
+                    ctx.font = 'bold 11px Segoe UI';
+                    ctx.fillText(`${contour.temperature}°C`, x + 5, y - 5);
+                }
+            });
+        }
+
+        function drawOperatingPoint() {
+            const x = conductivityToPixel(currentOperatingPoint.conductivity);
+            const y = salinityToPixel(currentOperatingPoint.salinity);
+            
+            // Draw crosshairs
+            ctx.strokeStyle = '#ff4757';
+            ctx.lineWidth = 1;
+            ctx.setLineDash([5, 5]);
+            
+            // Vertical line
+            ctx.beginPath();
+            ctx.moveTo(x, GRAPH_MARGIN);
+            ctx.lineTo(x, canvas.height - GRAPH_MARGIN);
+            ctx.stroke();
+            
+            // Horizontal line
+            ctx.beginPath();
+            ctx.moveTo(GRAPH_MARGIN, y);
+            ctx.lineTo(canvas.width - GRAPH_MARGIN, y);
+            ctx.stroke();
+            
+            // Reset line dash
+            ctx.setLineDash([]);
+            
+            // Draw operating point
+            ctx.fillStyle = '#ff4757';
+            ctx.beginPath();
+            ctx.arc(x, y, 6, 0, 2 * Math.PI);
+            ctx.fill();
+            
+            // Draw white border
+            ctx.strokeStyle = 'white';
+            ctx.lineWidth = 2;
+            ctx.stroke();
+        }
+
+        function conductivityToPixel(conductivity) {
+            return GRAPH_MARGIN + (conductivity - CONDUCTIVITY_MIN) / (CONDUCTIVITY_MAX - CONDUCTIVITY_MIN) * (canvas.width - 2 * GRAPH_MARGIN);
+        }
+
+        function salinityToPixel(salinity) {
+            return canvas.height - GRAPH_MARGIN - (salinity - SALINITY_MIN) / (SALINITY_MAX - SALINITY_MIN) * (canvas.height - 2 * GRAPH_MARGIN);
+        }
+
+        function pixelToConductivity(x) {
+            return CONDUCTIVITY_MIN + (x - GRAPH_MARGIN) / (canvas.width - 2 * GRAPH_MARGIN) * (CONDUCTIVITY_MAX - CONDUCTIVITY_MIN);
+        }
+
+        function pixelToSalinity(y) {
+            return SALINITY_MIN + (canvas.height - GRAPH_MARGIN - y) / (canvas.height - 2 * GRAPH_MARGIN) * (SALINITY_MAX - SALINITY_MIN);
+        }
+
+        function handleGraphClick(event) {
+            const rect = canvas.getBoundingClientRect();
+            const x = event.clientX - rect.left;
+            const y = event.clientY - rect.top;
+            
+            const clickedConductivity = pixelToConductivity(x);
+            const clickedSalinity = pixelToSalinity(y);
+            
+            // Find the closest temperature contour point
+            let closestPoint = null;
+            let minDistance = Infinity;
+            
+            temperatureContours.forEach(contour => {
+                contour.points.forEach(point => {
+                    const px = conductivityToPixel(point.conductivity);
+                    const py = salinityToPixel(point.salinity);
+                    const distance = Math.sqrt((x - px) ** 2 + (y - py) ** 2);
+                    
+                    if (distance < minDistance && distance < 20) { // Within 20 pixels
+                        minDistance = distance;
+                        closestPoint = point;
+                    }
+                });
+            });
+            
+            if (closestPoint) {
+                // Update input fields
+                document.getElementById('conductivity').value = closestPoint.conductivity.toFixed(2);
+                document.getElementById('temperature').value = closestPoint.temperature.toFixed(1);
+                
+                // Calculate and show result
+                calculateSalinityFromInputs();
+            }
+        }
+        // UNESCO Practical Salinity Scale coefficients
+        const a = [0.0080, -0.1692, 25.3851, 14.0941, -7.0261, 2.7081];
+        const b = [0.0005, -0.0056, -0.0066, -0.0375, 0.0636, -0.0144];
+        const c = [0.6766097, 0.0200564, 0.0001104259, -0.00000069698, 0.0000000010031];
+
+        function calculateSalinity(conductivity, temperature) {
+            console.log('Input - C:', conductivity, 'T:', temperature);
+            
+            const C = conductivity; // Conductivity in mS/cm
+            const T = temperature;  // Temperature in °C
+            
+            // Calculate conductivity ratio R
+            // Standard KCl solution conductivity at 15°C, 0 dbar is 42.914 mS/cm
+            const C_std = 42.914;
+            const R = C / C_std;
+            
+            console.log('Conductivity ratio R:', R);
+            
+            // Calculate rt (temperature correction factor)
+            const rt = c[0] + c[1]*T + c[2]*T*T + c[3]*T*T*T + c[4]*T*T*T*T;
+            
+            console.log('Temperature correction rt:', rt);
+            
+            // Calculate temperature-corrected conductivity ratio
+            const RT = R / rt;
+            
+            console.log('Temperature-corrected ratio RT:', RT);
+            
+            // Ensure RT is positive for square root calculation
+            if (RT <= 0) {
+                console.log('RT is negative or zero, returning 0');
+                return 0;
+            }
+            
+            // Calculate salinity using the polynomial
+            const sqrtRT = Math.sqrt(RT);
+            
+            let S = a[0] + a[1]*sqrtRT + a[2]*RT + a[3]*RT*sqrtRT + a[4]*RT*RT + a[5]*RT*RT*sqrtRT;
+            
+            console.log('Base salinity S:', S);
+            
+            // Apply temperature correction
+            const deltaS = (T - 15) * (b[0] + b[1]*sqrtRT + b[2]*RT + b[3]*RT*sqrtRT + b[4]*RT*RT + b[5]*RT*RT*sqrtRT);
+            
+            console.log('Temperature correction deltaS:', deltaS);
+            
+            S += deltaS;
+            
+            const finalS = Math.max(0, S);
+            console.log('Final salinity:', finalS);
+            
+            return finalS; // Salinity cannot be negative
+        }
+
+        function calculateSalinityFromInputs() {
+            const conductivity = parseFloat(document.getElementById('conductivity').value);
+            const temperature = parseFloat(document.getElementById('temperature').value);
+            const resultDiv = document.getElementById('result');
+            const errorDiv = document.getElementById('error');
+            
+            // Clear previous error
+            errorDiv.classList.remove('show');
+            
+            console.log('Conductivity:', conductivity, 'Temperature:', temperature);
+            
+            // Validate inputs
+            if (isNaN(conductivity) || isNaN(temperature)) {
+                showError('Please enter valid numerical values for both conductivity and temperature.');
+                return;
+            }
+            
+            if (conductivity <= 0) {
+                showError('Conductivity must be greater than 0.');
+                return;
+            }
+            
+            try {
+                const salinity = calculateSalinity(conductivity, temperature);
+                console.log('Calculated salinity:', salinity);
+                
+                if (isNaN(salinity)) {
+                    showError('Error: Invalid salinity calculation result.');
+                    return;
+                }
+                
+                document.getElementById('salinityValue').textContent = salinity.toFixed(3) + ' PSU';
+                resultDiv.classList.add('show');
+                console.log('Result should be visible now');
+                
+                // Update operating point on graph
+                currentOperatingPoint = {
+                    conductivity: conductivity,
+                    salinity: salinity,
+                    temperature: temperature
+                };
+                drawGraph();
+            } catch (error) {
+                console.error('Calculation error:', error);
+                showError('Error calculating salinity: ' + error.message);
+            }
+        }
+
+        document.getElementById('salinityForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            const conductivity = parseFloat(document.getElementById('conductivity').value);
+            const temperature = parseFloat(document.getElementById('temperature').value);
+            const resultDiv = document.getElementById('result');
+            const errorDiv = document.getElementById('error');
+            
+            // Clear previous error
+            errorDiv.classList.remove('show');
+            
+            console.log('Conductivity:', conductivity, 'Temperature:', temperature);
+            
+            // Validate inputs
+            if (isNaN(conductivity) || isNaN(temperature)) {
+                showError('Please enter valid numerical values for both conductivity and temperature.');
+                return;
+            }
+            
+            if (conductivity <= 0) {
+                showError('Conductivity must be greater than 0.');
+                return;
+            }
+            
+            // Remove temperature restriction for now to test
+            // if (temperature < -2 || temperature > 35) {
+            //     showError('Temperature should be between -2°C and 35°C for accurate salinity calculation.');
+            //     return;
+            // }
+            
+            try {
+                const salinity = calculateSalinity(conductivity, temperature);
+                console.log('Calculated salinity:', salinity);
+                
+                if (isNaN(salinity)) {
+                    showError('Error: Invalid salinity calculation result.');
+                    return;
+                }
+                
+                document.getElementById('salinityValue').textContent = salinity.toFixed(3) + ' PSU';
+                resultDiv.classList.add('show');
+                console.log('Result should be visible now');
+            } catch (error) {
+                console.error('Calculation error:', error);
+                showError('Error calculating salinity: ' + error.message);
+            }
+        });
+
+        function showError(message) {
+            const errorDiv = document.getElementById('error');
+            errorDiv.textContent = message;
+            errorDiv.classList.add('show');
+        }
+
+        function resetForm() {
+            document.getElementById('conductivity').value = '';
+            document.getElementById('temperature').value = '';
+            document.getElementById('result').classList.remove('show');
+            document.getElementById('error').classList.remove('show');
+            
+            // Clear operating point from graph
+            currentOperatingPoint = null;
+            drawGraph();
+        }
+
+        // Add smooth focus transitions
+        document.querySelectorAll('input[type="number"]').forEach(input => {
+            input.addEventListener('focus', function() {
+                this.parentElement.style.transform = 'scale(1.02)';
+            });
+            
+            input.addEventListener('blur', function() {
+                this.parentElement.style.transform = 'scale(1)';
+            });
+        });
+
+        // Initialize graph when page loads
+        window.addEventListener('load', function() {
+            initGraph();
+        });
+    </script>
+</body>
+</html>
